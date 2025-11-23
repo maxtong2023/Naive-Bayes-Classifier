@@ -112,6 +112,9 @@ class Bayes_Classifier:
         for token in tokens:
             if token:
                 features.append(token)
+        if not features and tokens:
+            # prob overkill but keeps empty docs from blowing up
+            features = tokens[:]
         if self.useBigrams and len(tokens) > 1:
             idx = 0
             while idx < len(tokens) - 1:
@@ -125,9 +128,19 @@ class Bayes_Classifier:
         cleaned = re.sub(r"[^a-z0-9\s']", "  ", lowered)
         rawTokens = cleaned.split()
         filtered = []
+        if len(rawTokens) == 0:
+            return filtered
         for tok in rawTokens:
-            if tok not in self.stopWords:
-                filtered.append(self._stemWord(tok))
+            tok = tok.strip()
+            if not tok:
+                continue
+            if tok in self.stopWords:
+                continue
+            piece = self._stemWord(tok)
+            filtered.append(piece)
+        if not filtered:
+            #if everything got stripped just fall back to raw tokens
+            return rawTokens
         return filtered
 
     def _stemWord(self, word):
